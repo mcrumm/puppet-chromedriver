@@ -74,6 +74,9 @@ class chromedriver (
   $target_link = "${target}/chromedriver"
 
   if $ensure == latest {
+    file { $base_dir :
+      ensure => 'directory',
+    }->
     exec { 'latest-release':
       command => "curl -s -S -o ${latest_path} ${base_url}/${latest_file}",
       before  => [ Archive[$archive] ],

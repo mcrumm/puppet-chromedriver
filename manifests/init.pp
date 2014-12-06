@@ -17,7 +17,7 @@
 # === Examples
 #
 #  class { 'chromedriver':
-#    ensure => '2.10',
+#    ensure => 'latest',
 #  }
 #
 # === Authors
@@ -54,30 +54,34 @@ class chromedriver (
     default  => 32,
   }
 
-  $latest_version = '2.11'
-  $latest_md5 = {
-    "32" => "bf0d731cd34fd07e22f4641c9aec8483",
-    "64" => "7a7336caea140f6ac1cb8fae8df50d36",
-  }
+  $base_url       = "http://chromedriver.storage.googleapis.com"
+  $base_dir       = "/opt/chromedriver"
+  $latest_file    = 'LATEST_RELEASE'
+  $latest_path    = "${base_dir}/${latest}"
+  $latest_version = "`cat ${latest_path}`"
 
-  $version = $ensure ? {
+  $version  = $ensure ? {
     present => $latest_version,
     latest  => $latest_version,
     absent  => $latest_version,
-    default => $ensure 
+    default => $ensure
   }
 
   $archive     = "chromedriver_linux${bits}"
-  $url         = "http://chromedriver.storage.googleapis.com/${version}/${archive}.zip"
-  $base_dir    = "/opt/chromedriver"
+  $url         = "${base_url}/${version}/${archive}.zip"
   $archive_dir = "${base_dir}/${version}"
   $target_file = "${archive_dir}/chromedriver"
   $target_link = "${target}/chromedriver"
 
+  if $ensure == latest {
+    exec { 'latest-release':
+      command => "curl -s -S -o ${latest_path} ${base_url}/${latest_file}",
+      before  => [ Archive[$archive] ],
+    }
+  }
+
   if $md5 != undef {
     $digest = $md5
-  } elsif $version == $latest_version {
-    $digest = $latest_md5[$bits]
   }
 
   if $digest {

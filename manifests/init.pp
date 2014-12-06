@@ -57,7 +57,7 @@ class chromedriver (
   $base_url       = "http://chromedriver.storage.googleapis.com"
   $base_dir       = "/opt/chromedriver"
   $latest_file    = 'LATEST_RELEASE'
-  $latest_path    = "${base_dir}/${latest}"
+  $latest_path    = "${base_dir}/${latest_file}"
   $latest_version = "`cat ${latest_path}`"
 
   $version  = $ensure ? {

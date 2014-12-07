@@ -1,24 +1,35 @@
 define chromedriver::latest (
-  $md5            = undef,
-  $base_dir       = '/opt/chromedriver',
-  $base_url       = 'http://chromedriver.storage.googleapis.com'
+  $md5      = undef,
+  $target   = undef,
+  $base_dir = undef,
 ) {
 
-  $latest_file    = 'LATEST_RELEASE'
-  $latest_path    = "${target}/${latest_file}"
+  include chromedriver::params
 
-  file { $target :
+  $target_real = $target ? {
+    undef   => $::chromedriver::params::target,
+    default => $target,
+  }
+
+  $base_dir_real = $base_dir ? {
+    undef   => $::chromedriver::params::base_dir,
+    default => $base_dir,
+  }
+
+  $latest_path  = "${base_dir_real}/${::chromedriver::params::latest}"
+
+  file { $target_real :
     ensure => 'directory',
   } ->
 
   exec { 'latest-release':
-    command => "curl -s -S -o ${latest_path} ${base_url}/${latest_file}",
+    command => "curl -s -S -o ${latest_path} ${::chromedriver::params::latest_url}",
   } ->
 
-  ::chromedriver::version { 'latest':
+  ::chromedriver::version { $title :
     version   => file($latest_path),
+    target    => $target_real,
     md5       => $md5,
-    base_dir  => $base_dir,
-    base_url  => $base_url,
+    base_dir  => $base_dir_real,
   }
 }

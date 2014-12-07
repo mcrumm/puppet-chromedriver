@@ -46,11 +46,22 @@
 # }
 class chromedriver (
   $ensure   = present,
-  $target   = '/usr/local/bin',
   $md5      = undef,
-  $base_url = 'http://chromedriver.storage.googleapis.com',
-  $base_dir = '/opt/chromedriver',
+  $target   = undef,
+  $base_dir = undef,
 ) {
+
+  include chromedriver::params
+
+  $target_real = $target ? {
+    undef   => $::chromedriver::params::target,
+    default => $target,
+  }
+
+  $base_dir_real = $base_dir ? {
+    undef   => $::chromedriver::params::base_dir,
+    default => $base_dir,
+  }
 
   $version  = $ensure ? {
     present => latest,
@@ -61,8 +72,8 @@ class chromedriver (
 
   if $ensure == absent {
     file { [
-      $base_dir,
-      "${target}/chromedriver",
+      $base_dir_real,
+      "${target_real}/${::chromedriver::params::bin}",
     ]:
       ensure  => $ensure,
       force   => true,
@@ -71,16 +82,16 @@ class chromedriver (
   } else {
     if $version == latest {
       ::chromedriver::latest { 'latest':
+        target    => $target_real,
         md5       => $md5,
-        base_url  => $base_url,
-        base_dir  => $base_dir,
+        base_dir  => $base_dir_real,
       }
     }
     else {
       ::chromedriver::version { $version :
+        target    => $target_real,
         md5       => $md5,
-        base_url  => $base_url,
-        base_dir  => $base_dir,
+        base_dir  => $base_dir_real,
       }
     }
   }

@@ -1,14 +1,20 @@
 define chromedriver::version (
   $version  = $title,
+  $target   = undef,
   $md5      = undef,
-  $base_url = 'http://chromedriver.storage.googleapis.com',
-  $base_dir = '/opt/chromedriver'
+  $base_dir = undef,
 ) {
   include ::unzip
+  include chromedriver::params
 
-  $bits = $::hardwaremodel ? {
-    'x86_64' => 64,
-    default  => 32,
+  $target_real = $target ? {
+    undef   => $::chromedriver::params::target,
+    default => $target,
+  }
+
+  $base_dir_real = $base_dir ? {
+    undef   => $::chromedriver::params::base_dir,
+    default => $base_dir,
   }
 
   if $md5 != undef {
@@ -20,20 +26,18 @@ define chromedriver::version (
     default => true
   }
 
-  $archive      = "chromedriver_linux${bits}"
-  $url          = "${base_url}/${version}/${archive}.zip"
-  $archive_dir  = "${base_dir}/${version}"
-  $target_file  = "${archive_dir}/chromedriver"
-  $target_link  = "${target}/chromedriver"
+  $version_url  = "${::chromedriver::params::base_url}/${version}"
+  $target_file  = "${archive_dir}/${::chromedriver::params::bin}"
+  $target_link  = "${target_real}/${::chromedriver::params::bin}"
 
-  archive { $archive:
+  archive { $::chromedriver::params::archive:
     ensure        => present,
     checksum      => $verify_checksum,
     digest_string => $digest,
     extension     => 'zip',
-    target        => $archive_dir,
-    root_dir      => 'chromedriver',
-    url           => $url,
+    target        => "${base_dir_real}/${version}",
+    root_dir      => $::chromedriver::params::bin,
+    url           => "${version_url}/${::chromedriver::params::archive}.zip",
     require       => Class['::unzip'],
   } ->
 

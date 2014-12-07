@@ -27,6 +27,7 @@ define chromedriver::version (
   }
 
   $version_url  = "${::chromedriver::params::base_url}/${version}"
+  $archive_dir  = "${base_dir_real}/${version}"
   $target_file  = "${archive_dir}/${::chromedriver::params::bin}"
   $target_link  = "${target_real}/${::chromedriver::params::bin}"
 
@@ -35,7 +36,7 @@ define chromedriver::version (
     checksum      => $verify_checksum,
     digest_string => $digest,
     extension     => 'zip',
-    target        => "${base_dir_real}/${version}",
+    target        => $archive_dir,
     root_dir      => $::chromedriver::params::bin,
     url           => "${version_url}/${::chromedriver::params::archive}.zip",
     require       => Class['::unzip'],

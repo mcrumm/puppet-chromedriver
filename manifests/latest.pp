@@ -1,5 +1,6 @@
 define chromedriver::latest (
-  $target         = '/opt/chromedriver',
+  $md5            = undef,
+  $base_dir       = '/opt/chromedriver',
   $base_url       = 'http://chromedriver.storage.googleapis.com'
 ) {
 
@@ -15,6 +16,9 @@ define chromedriver::latest (
   } ->
 
   ::chromedriver::version { 'latest':
-    version => file($latest_path)
+    version   => file($latest_path),
+    md5       => $md5,
+    base_dir  => $base_dir,
+    base_url  => $base_url,
   }
 }

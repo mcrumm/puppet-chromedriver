@@ -45,84 +45,43 @@
 #   ensure => '2.10'
 # }
 class chromedriver (
-  $ensure = present,
-  $target = '/usr/local/bin',
-  $md5    = undef,
+  $ensure   = present,
+  $target   = '/usr/local/bin',
+  $md5      = undef,
+  $base_url = 'http://chromedriver.storage.googleapis.com',
+  $base_dir = '/opt/chromedriver',
 ) {
-  $bits = $::hardwaremodel ? {
-    "x86_64" => 64,
-    default  => 32,
-  }
-
-  $base_url       = "http://chromedriver.storage.googleapis.com"
-  $base_dir       = "/opt/chromedriver"
-  $latest_file    = 'LATEST_RELEASE'
-  $latest_path    = "${base_dir}/${latest_file}"
-  $latest_version = "`cat ${latest_path}`"
 
   $version  = $ensure ? {
-    present => $latest_version,
-    latest  => $latest_version,
-    absent  => $latest_version,
+    present => latest,
+    latest  => latest,
+    absent  => latest,
     default => $ensure
-  }
-
-  $archive     = "chromedriver_linux${bits}"
-  $url         = "${base_url}/${version}/${archive}.zip"
-  $archive_dir = "${base_dir}/${version}"
-  $target_file = "${archive_dir}/chromedriver"
-  $target_link = "${target}/chromedriver"
-
-  if $ensure == latest {
-    file { $base_dir :
-      ensure => 'directory',
-    }->
-    exec { 'latest-release':
-      command => "curl -s -S -o ${latest_path} ${base_url}/${latest_file}",
-      before  => [ Archive[$archive] ],
-    }
-  }
-
-  if $md5 != undef {
-    $digest = $md5
-  }
-
-  if $digest {
-    $verify_checksum = true
-  } else {
-    $verify_checksum = false
   }
 
   if $ensure == absent {
     file { [
       $base_dir,
-      $target_link,
+      "${target}/chromedriver",
     ]:
       ensure  => $ensure,
       force   => true,
       recurse => true,
     }
   } else {
-    include ::unzip
-
-    archive { $archive:
-      ensure        => present,
-      checksum      => $verify_checksum,
-      digest_string => $digest,
-      extension     => 'zip',
-      target        => $archive_dir,
-      root_dir      => 'chromedriver',
-      url           => $url,
-      require       => Class['::unzip'],
-    } ->
-
-    file { $target_file:
-      mode => '0755',
-    } ->
-
-    file { $target_link:
-      ensure => 'link',
-      target => $target_file,
+    if $version == latest {
+      ::chromedriver::latest { 'latest':
+        md5       => $md5,
+        base_url  => $base_url,
+        base_dir  => $base_dir,
+      }
+    }
+    else {
+      ::chromedriver::version { $version :
+        md5       => $md5,
+        base_url  => $base_url,
+        base_dir  => $base_dir,
+      }
     }
   }
 }

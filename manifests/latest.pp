@@ -18,7 +18,7 @@ define chromedriver::latest (
 
   $latest_path  = "${base_dir_real}/${::chromedriver::params::latest}"
 
-  file { $target_real :
+  file { $base_dir_real :
     ensure => 'directory',
   } ->
 
